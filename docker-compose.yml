@@ -1,10 +1,13 @@
+version: "3.9"
+
 services:
   backend:
     build:
-      context: .
-      dockerfile: backend.Dockerfile
+      context: ./api
+      dockerfile: Dockerfile
     volumes:
       - ./api:/app
+      - /app/vendor/bundle
     ports:
       - "3000:3000"
     depends_on:
@@ -12,18 +15,23 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:password@db:5432/postgres
       RAILS_ENV: development
+    command: ["bin/rails", "server", "-b", "0.0.0.0"]
 
   web:
     build:
-      context: .
-      dockerfile: web.Dockerfile
+      context: ./web
+      dockerfile: Dockerfile
     volumes:
       - ./web:/app
-      - /app/node_modules  # ← これを追加して、node_modules をホストと共有しない
+      - /app/node_modules
     ports:
       - "5173:5173"
     depends_on:
       - backend
+    environment:
+      NODE_ENV: development
+      # Docker 内で動かす場合は backend コンテナ名を使える
+      #VITE_API_BASE: http://backend:3000/api
 
   db:
     image: postgres:15
